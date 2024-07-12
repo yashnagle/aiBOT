@@ -23,17 +23,46 @@
 }
 
 .TextEntry {
+  display: flex;
+  align-items: center;
   position: fixed;
   bottom: 35px;
   width: 100%;
   justify-content: center;
+  border-radius: 4px;
   padding: 10px;
 }
 
-.text-entry input {
+.query-input {
   width: 80%;
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  outline: none;
+  justify-content: center;
+  resize: vertical;
+  min-height: 40px;
+  overflow-y: auto;
+}
+
+.icon-title {
+  display: inline-block;
+  align-items: center;
+}
+.icon {
+  max-width: 37%;
+  height: auto;
+  vertical-align: middle;
+  display: inline-block;
+  width: 50%;
+}
+.icon_title {
+  display: inline-block;
+  font-size: 3.5em;
+  width: 50%;
+}
+
+.subtitle {
+  font-size: 1.75em;
 }
