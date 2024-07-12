@@ -16,7 +16,7 @@ function App() {
       </div>
 
       <div className="TextEntry">
-        {/* <input type="query" placeholder="Enter Text Here" /> */}
+        <textarea class="query-input" placeholder="Enter query here"></textarea>
         <textarea class="query-input" placeholder="Enter query here"></textarea>
       </div>
     </div>
