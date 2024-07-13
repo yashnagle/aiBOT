@@ -5,7 +5,6 @@ import React, { Component, useState } from "react";
 
 function App() {
   const [val, setVal] = useState("");
-  const [val2, setVal2] = useState("");
   const click1 = () => {
     if (val === "") {
       console.log("No input!");
@@ -15,20 +14,8 @@ function App() {
     }
     // make the API call to send the query
   };
-  const click2 = () => {
-    if (val2 === "") {
-      console.log("No input!");
-    } else {
-      console.log("Query: ", val2);
-      console.log("Making API call!");
-    }
-    // make the API call to send the query
-  };
 
   const change1 = (event) => {
-    setVal(event.target.value);
-  };
-  const change2 = (event) => {
     setVal(event.target.value);
   };
 
