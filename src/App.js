@@ -17,7 +17,6 @@ function App() {
 
       <div className="TextEntry">
         <textarea class="query-input" placeholder="Enter query here"></textarea>
-        <textarea class="query-input" placeholder="Enter query here"></textarea>
       </div>
     </div>
   );
