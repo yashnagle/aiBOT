@@ -67,6 +67,16 @@
   align-self: flex-end;
 }
 
+.file-upload {
+  min-height: 40px;
+  background-color: #ccc;
+  border: 1px solid #ccc;
+  margin: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
 .submit-button:hover {
   background-color: #758a86;
 }
