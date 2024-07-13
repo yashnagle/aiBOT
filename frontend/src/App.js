@@ -1,11 +1,20 @@
 import logo from "./logo.svg";
 import "./App.css";
 import robot_icon from "./robot_icon.png";
-import React, { Component, useState } from "react";
+import React, { Component, useState, useEffect } from "react";
 
 function App() {
   const [val, setVal] = useState("");
   const [query, setQuery] = useState("");
+  const api_url = "http://127.0.0.1:5000";
+
+  const get_request = async () => {
+    const response = await fetch(api_url, {
+      method: "POST",
+    });
+    const body = await response.json();
+    console.log(body);
+  };
 
   const click1 = () => {
     if (val === "") {
@@ -16,7 +25,8 @@ function App() {
     }
 
     setQuery("");
-    // make the API call to send the query
+    // making the API call to send the query
+    get_request();
   };
 
   const change1 = (event) => {
