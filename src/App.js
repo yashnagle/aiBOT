@@ -5,7 +5,8 @@ import React, { Component, useState } from "react";
 
 function App() {
   const [val, setVal] = useState("");
-  const click = () => {
+  const [val2, setVal2] = useState("");
+  const click1 = () => {
     if (val === "") {
       console.log("No input!");
     } else {
@@ -14,9 +15,23 @@ function App() {
     }
     // make the API call to send the query
   };
-  const change = (event) => {
+  const click2 = () => {
+    if (val2 === "") {
+      console.log("No input!");
+    } else {
+      console.log("Query: ", val2);
+      console.log("Making API call!");
+    }
+    // make the API call to send the query
+  };
+
+  const change1 = (event) => {
     setVal(event.target.value);
   };
+  const change2 = (event) => {
+    setVal(event.target.value);
+  };
+
   return (
     <div className="App">
       <div className="Header">
@@ -28,21 +43,15 @@ function App() {
           <h2 className="subtitle">Ask me anything!</h2>
         </header>
       </div>
-
       <div className="TextEntry">
         <textarea
           className="query-input"
-          onChange={change}
+          onChange={change1}
           placeholder="Enter query here"
         ></textarea>
-        <button className="submit-button" onClick={click}>
+        <button className="submit-button" onClick={click1}>
           Submit
         </button>
-
-        {/* <textarea
-          className="query-input"
-          placeholder="Enter query here"
-        ></textarea> */}
       </div>
     </div>
   );
