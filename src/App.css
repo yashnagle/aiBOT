@@ -24,21 +24,23 @@
 
 .TextEntry {
   display: flex;
+  flex: auto;
   align-items: center;
   position: fixed;
   bottom: 35px;
   width: 80%;
-  justify-content: right;
+  justify-content: center;
   border-radius: 4px;
-  padding: 10px;
+  margin: 10px;
 }
 
 .query-input {
   width: 100%;
-  display: inline-block;
+  display: flex;
+  flex-direction: row;
   max-width: 50%;
   padding: 10px;
-  font-size: 16px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
   outline: none;
@@ -47,18 +49,18 @@
   min-height: 40px;
   overflow-y: auto;
 }
-.query-input-2 {
-  display: inline-block;
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  outline: none;
-  justify-content: center;
-  resize: vertical;
+
+.submit-button {
   min-height: 40px;
-  overflow-y: auto;
+  background-color: #ccc;
+  border: 1px solid #ccc;
+  margin: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #758a86;
 }
 
 .icon-title {

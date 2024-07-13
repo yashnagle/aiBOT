@@ -1,8 +1,22 @@
 import logo from "./logo.svg";
 import "./App.css";
 import robot_icon from "./robot_icon.png";
+import React, { Component, useState } from "react";
 
 function App() {
+  const [val, setVal] = useState("");
+  const click = () => {
+    if (val === "") {
+      console.log("No input!");
+    } else {
+      console.log("Query: ", val);
+      console.log("Making API call!");
+    }
+    // make the API call to send the query
+  };
+  const change = (event) => {
+    setVal(event.target.value);
+  };
   return (
     <div className="App">
       <div className="Header">
@@ -16,7 +30,19 @@ function App() {
       </div>
 
       <div className="TextEntry">
-        <textarea class="query-input" placeholder="Enter query here"></textarea>
+        <textarea
+          className="query-input"
+          onChange={change}
+          placeholder="Enter query here"
+        ></textarea>
+        <button className="submit-button" onClick={click}>
+          Submit
+        </button>
+
+        {/* <textarea
+          className="query-input"
+          placeholder="Enter query here"
+        ></textarea> */}
       </div>
     </div>
   );
