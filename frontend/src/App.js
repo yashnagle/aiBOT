@@ -34,10 +34,25 @@ function App() {
     setQuery(event.target.value);
   };
 
-  function uploadFile(event) {
+  async function uploadFile(event) {
     const file = event.target.files[0];
-    console.log(file);
-    // You can now handle the file upload logic here
+
+    if (file) {
+      console.log("Uploading..");
+      // console.log(file);
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const result = await fetch("http://127.0.0.1:5000/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await result.json();
+        console.log(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
   }
 
   return (
