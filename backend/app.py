@@ -4,7 +4,9 @@ from flask_restful import Resource, Api
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import pandas as pd
+from pymilvus import connections, utility, FieldSchema, CollectionSchema, DataType, Collection
 
+print(connections)
 
 upload_folder = 'backend/uploads'
 allowed_extensions = {'csv', 'xlsx', 'pdf'}
@@ -38,9 +40,9 @@ def upload_file():
         path = "uploads"
         file.save(os.path.join(path, file.filename))
         path = path + "/"+file.filename
-        df = pd.read_csv(path)
-        print(df.head())
-        return jsonify({'status':'File Received', 'file_columns': list(df.columns)})
+        # df = pd.read_csv(path)
+        # print(df.head())
+        return jsonify({'status':'File Received'})
     else:
         return jsonify({'status':'File Not Received'})
 
