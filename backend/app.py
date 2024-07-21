@@ -1,12 +1,18 @@
 import os
+import glob
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import pandas as pd
-from pymilvus import connections, utility, FieldSchema, CollectionSchema, DataType, Collection
+import haystack_setup
+from haystack_setup import ingest
+from pathlib import Path
 
-print(connections)
+#uploading documents to vectorDB
+# response = ingest('pdf')
+# print(response)
+
 
 upload_folder = 'backend/uploads'
 allowed_extensions = {'csv', 'xlsx', 'pdf'}
