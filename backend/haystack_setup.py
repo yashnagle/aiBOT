@@ -33,8 +33,26 @@ indexing_pipeline.connect("converter", "splitter")
 indexing_pipeline.connect("splitter", "embedder")
 indexing_pipeline.connect("embedder", "writer")
 
-def ingest(file_extension):
-    file_path = glob.glob('uploads/*.'+file_extension)
-    indexing_pipeline.run({"converter": {"sources": [Path(i) for i in file_path]}})
+file_path = glob.glob('uploads/*.pdf')
+# indexing_pipeline.run({"converter": {"sources": [Path(i) for i in file_path]}})
+indexing_pipeline.run({"converter": {"sources": [Path('uploads/test_doc1.pdf')]}})
 
-    return document_store.count_documents()
+question = 'Motivations?'
+retrieval_pipeline = Pipeline()
+retrieval_pipeline.add_component("embedder", SentenceTransformersTextEmbedder())
+retrieval_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store, top_k=3))
+retrieval_pipeline.connect("embedder", "retriever")
+
+
+retrieval_results = retrieval_pipeline.run({"embedder": {"text": question}})
+print(retrieval_results)
+# for doc in retrieval_results["retriever"]["documents"]:
+#     print(doc.content)
+#     print("-" * 10)
+
+
+# def ingest(file_extension):
+#     file_path = glob.glob('uploads/*.'+file_extension)
+#     indexing_pipeline.run({"converter": {"sources": [Path(i) for i in file_path]}})
+
+#     return document_store.count_documents()

@@ -35,6 +35,7 @@ function App() {
   };
 
   async function uploadFile(event) {
+    const fileInput = event.target;
     const file = event.target.files[0];
 
     if (file) {
@@ -51,6 +52,10 @@ function App() {
         console.log(data);
       } catch (error) {
         console.error(error);
+      } finally {
+        setTimeout(() => {
+          fileInput.value = "";
+        }, 2500);
       }
     }
   }
