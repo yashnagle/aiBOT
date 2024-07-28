@@ -2,11 +2,14 @@ import os
 import glob
 
 #Indexing pipeline
-from haystack import Pipeline
-from haystack.components.converters import PyPDFToDocument
-from haystack.components.embedders import SentenceTransformersDocumentEmbedder, SentenceTransformersTextEmbedder
-from haystack.components.preprocessors import DocumentSplitter
 from haystack.components.writers import DocumentWriter
+from haystack.components.converters import MarkdownToDocument, PyPDFToDocument, TextFileToDocument
+from haystack.components.preprocessors import DocumentSplitter, DocumentCleaner
+from haystack.components.routers import FileTypeRouter
+from haystack.components.joiners import DocumentJoiner
+from haystack.components.embedders import SentenceTransformersDocumentEmbedder
+from haystack import Pipeline
+
 from milvus_haystack import MilvusDocumentStore
 from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
 from pathlib import Path
@@ -23,6 +26,16 @@ document_store = MilvusDocumentStore(
     drop_old=True,
 )
 
+
+#File routers and converters
+file_type_router = FileTypeRouter(mime_types=["text/plain", "application/pdf", "text/markdown"])
+text_file_converter = TextFileToDocument()
+markdown_converter = MarkdownToDocument()
+pdf_converter = PyPDFToDocument()
+document_joiner = DocumentJoiner()
+
+print(document_joiner)
+
 indexing_pipeline = Pipeline()
 
 indexing_pipeline.add_component("converter", PyPDFToDocument())
@@ -33,26 +46,4 @@ indexing_pipeline.connect("converter", "splitter")
 indexing_pipeline.connect("splitter", "embedder")
 indexing_pipeline.connect("embedder", "writer")
 
-file_path = glob.glob('uploads/*.pdf')
-# indexing_pipeline.run({"converter": {"sources": [Path(i) for i in file_path]}})
-indexing_pipeline.run({"converter": {"sources": [Path('uploads/test_doc1.pdf')]}})
-
-question = 'Motivations?'
-retrieval_pipeline = Pipeline()
-retrieval_pipeline.add_component("embedder", SentenceTransformersTextEmbedder())
-retrieval_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store, top_k=3))
-retrieval_pipeline.connect("embedder", "retriever")
-
-
-retrieval_results = retrieval_pipeline.run({"embedder": {"text": question}})
-print(retrieval_results)
-# for doc in retrieval_results["retriever"]["documents"]:
-#     print(doc.content)
-#     print("-" * 10)
-
-
-# def ingest(file_extension):
-#     file_path = glob.glob('uploads/*.'+file_extension)
-#     indexing_pipeline.run({"converter": {"sources": [Path(i) for i in file_path]}})
-
-#     return document_store.count_documents()
+# file_path = glob.glob('uploads/*.pdf')
