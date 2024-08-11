@@ -5,16 +5,14 @@ from flask_restful import Resource, Api
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import pandas as pd
-# from pymilvus import connections, utility, FieldSchema, CollectionSchema, DataType, Collection
-# import haystack_setup
-# from haystack_setup import ingest
+import haystack_setup
+import rag_query
 from pathlib import Path
 
-# connections.connect("default", host="localhost", port="19530")
+ingesting_pipeline = haystack_setup.get_ingesting_pipeline()
+query_pipeline = rag_query.get_query_pipeline()
 
-#uploading documents to vectorDB
-# response = ingest('pdf')
-# print(response)
+print('Ingesting Pipeline:\n', ingesting_pipeline)
 
 
 upload_folder = 'backend/uploads'
@@ -31,12 +29,24 @@ def allowed_file(filename):
 @app.route("/", methods = ['GET', 'POST'])
 @cross_origin()
 def query():
+    print(query_pipeline)
     if request.method == 'GET':
         print('GET request')
         return jsonify({'request_type':'GET'})
     elif request.method == 'POST':
         print('POST request')
-        return jsonify({'request_type':'POST'})
+        query = request.get_json()['query']
+        print(query)
+
+        results = query_pipeline.run(
+            {
+                "text_embedder": {"text": query},
+                "prompt_builder": {"query": query},
+                }
+        )
+        answer = results["generator"]["replies"][0]
+        print(answer)
+        return jsonify({'request_type':'POST', 'Response':answer})
 
 
 @app.route('/upload', methods=['POST'])
@@ -45,13 +55,13 @@ def upload_file():
 
     if 'file' in request.files:
         file = request.files['file']
-        # print(file)
         path = "uploads"
         file.save(os.path.join(path, file.filename))
-        path = path + "/"+file.filename
-        # df = pd.read_csv(path)
-        # print(df.head())
-        return jsonify({'status':'File Received'})
+        # path = path + "/"+file.filename
+        
+        print(path)
+        print(ingesting_pipeline.run({"file_type_router": {"sources": list(Path(path).glob(file.filename))}}))
+        return jsonify({'status':'File Ingested'})
     else:
         return jsonify({'status':'File Not Received'})
 

@@ -30,3 +30,4 @@ yarn-error.log*
 *.xlsx
 ./backend/uploads/
 ./backend/volumes
+./backend/.env

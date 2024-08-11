@@ -1,0 +1,95 @@
+import os
+from dotenv import load_dotenv, dotenv_values
+from jinja2 import Template
+load_dotenv()
+
+
+from haystack import Pipeline
+from haystack.utils import Secret
+from haystack.components.embedders import SentenceTransformersTextEmbedder
+from haystack.components.builders import PromptBuilder
+from haystack.components.generators import HuggingFaceAPIGenerator
+from huggingface_hub import InferenceClient
+from milvus_haystack import MilvusDocumentStore
+from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
+
+generator = HuggingFaceAPIGenerator(api_type='serverless_inference_api',
+                                    api_params={'model':'mistralai/Mistral-Nemo-Instruct-2407'},
+                                    token=Secret.from_token(os.getenv('MODEL_KEY')))
+
+# print(Secret.from_token(os.getenv('MODEL_KEY')))
+# print(os.getenv('MODEL_KEY'))
+
+
+# os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+model = client = InferenceClient(
+        "mistralai/Mistral-Nemo-Instruct-2407",
+        token=Secret.from_token(os.getenv('MODEL_KEY'))
+    )
+
+prompt_template = """Answer the following query based on the provided context. If the context does
+                        not include an answer, reply with 'I don't know'.\n
+                        Previous Conversation:\n
+                        {% for turn in conversation_history %}
+                            {{ turn }}
+                        {% endfor %}
+                        Current Query: {{query}}
+                        Documents:
+                        {% for doc in documents %}
+                            {{ doc.content }}
+                        {% endfor %}
+                        Answer: 
+                    """
+conversation_history = []
+
+template = Template(prompt_template)
+
+def update_conversation(conv):
+    #conv 
+    conversation_history.append(conv)
+    return conversation_history
+
+def get_query_pipeline():
+    document_store = MilvusDocumentStore(
+        connection_args={
+            "host": "localhost",
+            "port": "19530",
+            "user": "root",
+            "password": "Milvus",
+            "secure": False,
+        },
+        drop_old=True,
+    )
+    
+
+    # print(model)
+    # print(generator)
+    question = 'What are the motivations of studying abroad?'
+
+
+
+    conversation_history.append('User:What are the motivations of studying abroad?')
+    rag_pipeline = Pipeline()
+    rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
+    rag_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store))
+    rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
+    rag_pipeline.add_component("generator", generator)
+
+    rag_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
+    rag_pipeline.connect("retriever", "prompt_builder.documents")
+    rag_pipeline.connect("prompt_builder", "generator")
+
+    return rag_pipeline
+
+    # results = rag_pipeline.run(
+    #     {
+    #         "text_embedder": {"text": question},
+    #         "prompt_builder": {"query": question},
+    #     }
+    # )
+
+    # print('RAG answer:', results["generator"]["replies"][0])
+    # print('RAG answer:', results['generator']['replies'][0])
+    # conversation_history.append('Bot:'+ results['generator']['replies'][0])
+    # print(conversation_history)
