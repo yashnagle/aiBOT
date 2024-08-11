@@ -7,7 +7,7 @@
 /frontend/node_modules
 
 #virtual environment
-./backend/.venv/
+backend/.venv/
 
 # testing
 /coverage
@@ -31,7 +31,6 @@ yarn-error.log*
 backend/uploads/
 backend/volumes/
 backend/.env
-
 
 #ignore log files
 .log
