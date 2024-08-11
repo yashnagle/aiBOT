@@ -23,7 +23,7 @@ generator = HuggingFaceAPIGenerator(api_type='serverless_inference_api',
 
 # os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-model = client = InferenceClient(
+model = InferenceClient(
         "mistralai/Mistral-Nemo-Instruct-2407",
         token=Secret.from_token(os.getenv('MODEL_KEY'))
     )
@@ -71,7 +71,7 @@ def get_query_pipeline():
 
     conversation_history.append('User:What are the motivations of studying abroad?')
     rag_pipeline = Pipeline()
-    rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
+    rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model))
     rag_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store))
     rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
     rag_pipeline.add_component("generator", generator)

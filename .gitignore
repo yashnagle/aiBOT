@@ -28,6 +28,9 @@ yarn-error.log*
 
 
 *.xlsx
-./backend/uploads/
-./backend/volumes
-./backend/.env
+backend/uploads/
+backend/volumes/
+backend/.env/
+
+#ignore log files
+.log
