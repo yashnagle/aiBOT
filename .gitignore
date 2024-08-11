@@ -32,5 +32,7 @@ backend/uploads/
 backend/volumes/
 backend/.env
 
+
 #ignore log files
 .log
+
