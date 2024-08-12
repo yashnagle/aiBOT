@@ -12,7 +12,7 @@ from pathlib import Path
 ingesting_pipeline = haystack_setup.get_ingesting_pipeline()
 query_pipeline = rag_query.get_query_pipeline()
 
-print('Ingesting Pipeline:\n', ingesting_pipeline)
+# print('Ingesting Pipeline:\n', ingesting_pipeline)
 
 
 upload_folder = 'backend/uploads'
@@ -46,6 +46,7 @@ def query():
         )
         answer = results["generator"]["replies"][0]
         print(answer)
+        
         return jsonify({'request_type':'POST', 'Response':answer})
 
 

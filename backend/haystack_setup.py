@@ -1,5 +1,6 @@
 import os
 import glob
+from haystack.utils import Secret
 
 
 def get_ingesting_pipeline():
@@ -48,9 +49,10 @@ def get_ingesting_pipeline():
 
     document_cleaner = DocumentCleaner()
     # document_splitter = DocumentSplitter(split_by="word", split_length=150, split_overlap=50)
-    document_splitter = DocumentSplitter()
+    document_splitter = DocumentSplitter(split_by='sentence', split_threshold = 10)
 
-    document_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2")
+
+    document_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2",token=Secret.from_token(os.getenv('MODEL_KEY')))
     document_writer = DocumentWriter(document_store)
 
 
