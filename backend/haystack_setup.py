@@ -2,41 +2,76 @@ import os
 import glob
 from haystack.utils import Secret
 
+from milvus_haystack import MilvusDocumentStore
+from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
+from pathlib import Path
+
+from haystack.components.writers import DocumentWriter
+from haystack.components.converters import MarkdownToDocument, PyPDFToDocument, TextFileToDocument
+from haystack.components.preprocessors import DocumentSplitter, DocumentCleaner
+from haystack.components.routers import FileTypeRouter
+from haystack.components.joiners import DocumentJoiner
+from haystack.components.embedders import SentenceTransformersDocumentEmbedder
+
+from haystack import Pipeline
+from haystack.utils import Secret
+from haystack.components.embedders import SentenceTransformersTextEmbedder
+from haystack.components.embedders import HuggingFaceAPIDocumentEmbedder
+from haystack.components.builders import PromptBuilder
+from haystack.components.generators import HuggingFaceAPIGenerator
+from huggingface_hub import InferenceClient
+from milvus_haystack import MilvusDocumentStore
+from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
+from haystack.components.retrievers import SentenceWindowRetrieval
+
+from haystack import Pipeline
+#Imports a PyMilvus package:
+from pymilvus import (
+    connections,
+    utility,
+    FieldSchema,
+    CollectionSchema,
+    DataType,
+    Collection,
+)
+
+#connecting to the database
+document_store = MilvusDocumentStore(
+    connection_args={
+        "host": "localhost",
+        "port": "19530",
+        "user": "root",
+        "password": "Milvus",
+        "secure": False,
+    },
+    drop_old=True,
+)
+
+generator = HuggingFaceAPIGenerator(api_type='serverless_inference_api',
+                                    api_params={'model':'mistralai/Mistral-Nemo-Instruct-2407'},
+                                    token=Secret.from_token(os.getenv('MODEL_KEY')))
+
+sentence_transformer = SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2",token=Secret.from_token(os.getenv('MODEL_KEY')))
+
+model = InferenceClient("mistralai/Mistral-Nemo-Instruct-2407", token=Secret.from_token(os.getenv('MODEL_KEY')))
+
+documents = []
+conversation_history = []
+prompt_template = """Answer the following query based on the context. If the context do
+                        not include an answer, reply with 'I don't know'.\n
+                        Previous Conversation:\n
+                        {% for turn in conversation_history %}
+                            {{ turn }}
+                        {% endfor %}
+                        Current Query: {{query}}
+                        Documents:
+                        {% for doc in documents %}
+                            {{ doc.content }}
+                        {% endfor %}
+                        Answer: 
+                    """
 
 def get_ingesting_pipeline():
-    #Indexing pipeline
-    from haystack.components.writers import DocumentWriter
-    from haystack.components.converters import MarkdownToDocument, PyPDFToDocument, TextFileToDocument
-    from haystack.components.preprocessors import DocumentSplitter, DocumentCleaner
-    from haystack.components.routers import FileTypeRouter
-    from haystack.components.joiners import DocumentJoiner
-    from haystack.components.embedders import SentenceTransformersDocumentEmbedder
-    from haystack import Pipeline
-    #Imports a PyMilvus package:
-    from pymilvus import (
-        connections,
-        utility,
-        FieldSchema,
-        CollectionSchema,
-        DataType,
-        Collection,
-    )
-    from milvus_haystack import MilvusDocumentStore
-    from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
-    from pathlib import Path
-
-    #connecting to the database
-    document_store = MilvusDocumentStore(
-        connection_args={
-            "host": "localhost",
-            "port": "19530",
-            "user": "root",
-            "password": "Milvus",
-            "secure": False,
-        },
-        drop_old=True,
-    )
-
     connections.connect("default", host="localhost", port="19530")
 
 
@@ -54,9 +89,6 @@ def get_ingesting_pipeline():
 
     document_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2",token=Secret.from_token(os.getenv('MODEL_KEY')))
     document_writer = DocumentWriter(document_store)
-
-
-
 
     preprocessing_pipeline = Pipeline()
     preprocessing_pipeline.add_component(instance=file_type_router, name="file_type_router")
@@ -81,12 +113,24 @@ def get_ingesting_pipeline():
     preprocessing_pipeline.connect("document_embedder", "document_writer")
 
     file_dir = 'uploads'
-
-    # print(list(Path(file_dir).glob("*.pdf")))
-
     return preprocessing_pipeline
 
-    # preprocessing_pipeline.run({"file_type_router": {"sources": list(Path(file_dir).glob("*.pdf"))}})
+def get_query_pipeline():
+    sentence_window_retriever = SentenceWindowRetrieval(document_store, window_size=3)
 
+    conversation_history.append('User:What are the motivations of studying abroad?')
+    rag_pipeline = Pipeline()
+    rag_pipeline.add_component("text_embedder", sentence_transformer)
+    # rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model))
+    rag_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store))
+    rag_pipeline.add_component("sentence_window_retriever", sentence_window_retriever)
+    rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
+    rag_pipeline.add_component("generator", generator)
 
-    #Costs of studying abroad
+    rag_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
+    # rag_pipeline.connect("retriever", "prompt_builder.documents")
+    rag_pipeline.connect("retriever", "sentence_window_retriever")
+    rag_pipeline.connect("sentence_window_retriever", "prompt_builder.documents")
+    rag_pipeline.connect("prompt_builder", "generator")
+
+    return rag_pipeline

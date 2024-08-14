@@ -27,18 +27,6 @@ generator = HuggingFaceAPIGenerator(api_type='serverless_inference_api',
                                     api_params={'model':'mistralai/Mistral-Nemo-Instruct-2407'},
                                     token=Secret.from_token(os.getenv('MODEL_KEY')))
 
-
-# print(Secret.from_token(os.getenv('MODEL_KEY')))
-# print(os.getenv('MODEL_KEY'))
-
-
-# os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-# document_embedder = HuggingFaceAPIDocumentEmbedder(api_type='serverless_inference_api',
-#                                                         api_params={'model':'sentence-transformers/all-MiniLM-L6-v2'},
-#                                                         token=Secret.from_token(os.getenv('MODEL_KEY')))
-
-
 sentence_transformer = SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2",token=Secret.from_token(os.getenv('MODEL_KEY')))
 
 model = InferenceClient("mistralai/Mistral-Nemo-Instruct-2407", token=Secret.from_token(os.getenv('MODEL_KEY')))

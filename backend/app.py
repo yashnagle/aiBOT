@@ -6,13 +6,19 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import pandas as pd
 import haystack_setup
-import rag_query
 from pathlib import Path
+#Imports a PyMilvus package:
+from pymilvus import (
+    connections,
+    utility,
+    FieldSchema,
+    CollectionSchema,
+    DataType,
+    Collection,
+)
 
 ingesting_pipeline = haystack_setup.get_ingesting_pipeline()
-query_pipeline = rag_query.get_query_pipeline()
-
-# print('Ingesting Pipeline:\n', ingesting_pipeline)
+query_pipeline = haystack_setup.get_query_pipeline()
 
 
 upload_folder = 'backend/uploads'
@@ -38,17 +44,25 @@ def query():
         query = request.get_json()['query']
         print(query)
 
-        results = query_pipeline.run(
-            {
-                "text_embedder": {"text": query},
-                "prompt_builder": {"query": query},
-                }
-        )
-        answer = results["generator"]["replies"][0]
-        print(answer)
+        # results = query_pipeline.run(
+        #     {
+        #         "text_embedder": {"text": query},
+        #         "prompt_builder": {"query": query},
+        #         }
+        # )
+        # answer = results["generator"]["replies"][0]
+        print(query_pipeline)
         
-        return jsonify({'request_type':'POST', 'Response':answer})
+        return jsonify({'request_type':'POST', 'Response':'answer'})
+    # return jsonify({'request_type':'POST', 'Response':'answer'})
 
+    # connections.connect("default", host="localhost", port="19530")
+    # collection = Collection('HaystackCollection')
+    # print(collection.schema)
+    # print(collection.description)
+    # print(collection.name)
+    # return jsonify({'request_type':'POST', 'Response':'answer'})
+    
 
 @app.route('/upload', methods=['POST'])
 @cross_origin()
@@ -67,8 +81,5 @@ def upload_file():
         return jsonify({'status':'File Not Received'})
 
 
-
-
-    
 if __name__ == '__main__':
     app.run(debug = True)
