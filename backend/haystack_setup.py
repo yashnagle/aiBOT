@@ -1,7 +1,7 @@
 import os
 import glob
 from haystack.utils import Secret
-
+from jinja2 import Template
 from milvus_haystack import MilvusDocumentStore
 from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
 from pathlib import Path
@@ -70,6 +70,7 @@ prompt_template = """Answer the following query based on the context. If the con
                         {% endfor %}
                         Answer: 
                     """
+template = Template(prompt_template)
 
 def get_ingesting_pipeline():
     connections.connect("default", host="localhost", port="19530")
@@ -85,6 +86,7 @@ def get_ingesting_pipeline():
     document_cleaner = DocumentCleaner()
     # document_splitter = DocumentSplitter(split_by="word", split_length=150, split_overlap=50)
     document_splitter = DocumentSplitter(split_by='sentence', split_threshold = 10)
+    # document_splitter = DocumentSplitter()
 
 
     document_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2",token=Secret.from_token(os.getenv('MODEL_KEY')))
@@ -118,19 +120,16 @@ def get_ingesting_pipeline():
 def get_query_pipeline():
     sentence_window_retriever = SentenceWindowRetrieval(document_store, window_size=3)
 
-    conversation_history.append('User:What are the motivations of studying abroad?')
+    # conversation_history.append('User:What is unforgettable energy?')
     rag_pipeline = Pipeline()
-    rag_pipeline.add_component("text_embedder", sentence_transformer)
-    # rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model))
-    rag_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store))
-    rag_pipeline.add_component("sentence_window_retriever", sentence_window_retriever)
+    # rag_pipeline.add_component("text_embedder", sentence_transformer)
+    rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model))
+    rag_pipeline.add_component("retriever", MilvusEmbeddingRetriever(document_store=document_store, top_k=3))
     rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
     rag_pipeline.add_component("generator", generator)
 
     rag_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
-    # rag_pipeline.connect("retriever", "prompt_builder.documents")
-    rag_pipeline.connect("retriever", "sentence_window_retriever")
-    rag_pipeline.connect("sentence_window_retriever", "prompt_builder.documents")
+    rag_pipeline.connect("retriever.documents", "prompt_builder.documents")
     rag_pipeline.connect("prompt_builder", "generator")
 
     return rag_pipeline

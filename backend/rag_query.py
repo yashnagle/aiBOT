@@ -71,7 +71,7 @@ def get_query_pipeline():
 
     sentence_window_retriever = SentenceWindowRetrieval(document_store, window_size=3)
 
-    conversation_history.append('User:What are the motivations of studying abroad?')
+    # conversation_history.append('User:What are the motivations of studying abroad?')
     rag_pipeline = Pipeline()
     rag_pipeline.add_component("text_embedder", sentence_transformer)
     # rag_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model))

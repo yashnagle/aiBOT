@@ -6,6 +6,8 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import pandas as pd
 import haystack_setup
+import rag_query
+from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
 from pathlib import Path
 #Imports a PyMilvus package:
 from pymilvus import (
@@ -18,6 +20,7 @@ from pymilvus import (
 )
 
 ingesting_pipeline = haystack_setup.get_ingesting_pipeline()
+# query_pipeline = rag_query.get_query_pipeline()
 query_pipeline = haystack_setup.get_query_pipeline()
 
 
@@ -35,7 +38,10 @@ def allowed_file(filename):
 @app.route("/", methods = ['GET', 'POST'])
 @cross_origin()
 def query():
-    print(query_pipeline)
+    connections.connect("default", host="localhost", port="19530")
+    collection = Collection('HaystackCollection')
+    print(collection.num_entities)
+    # print(query_pipeline)
     if request.method == 'GET':
         print('GET request')
         return jsonify({'request_type':'GET'})
@@ -44,24 +50,18 @@ def query():
         query = request.get_json()['query']
         print(query)
 
-        # results = query_pipeline.run(
-        #     {
-        #         "text_embedder": {"text": query},
-        #         "prompt_builder": {"query": query},
-        #         }
-        # )
-        # answer = results["generator"]["replies"][0]
-        print(query_pipeline)
+        results = query_pipeline.run(
+            {
+                "text_embedder": {"text": query},
+                "prompt_builder": {"query": query},
+                #add conversation list here
+                }
+        )
+        answer = results["generator"]["replies"][0]
+        print(results)
         
-        return jsonify({'request_type':'POST', 'Response':'answer'})
-    # return jsonify({'request_type':'POST', 'Response':'answer'})
+    return jsonify({'request_type':'POST', 'Response':answer})
 
-    # connections.connect("default", host="localhost", port="19530")
-    # collection = Collection('HaystackCollection')
-    # print(collection.schema)
-    # print(collection.description)
-    # print(collection.name)
-    # return jsonify({'request_type':'POST', 'Response':'answer'})
     
 
 @app.route('/upload', methods=['POST'])

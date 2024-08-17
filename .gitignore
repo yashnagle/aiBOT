@@ -30,6 +30,7 @@ yarn-error.log*
 *.xlsx
 backend/uploads/
 backend/volumes/
+backend/Model/
 backend/.env
 
 #ignore log files
