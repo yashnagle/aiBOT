@@ -22,7 +22,7 @@ text = FieldSchema(
 embeddings = FieldSchema(
     name="embeddings",
     dtype=DataType.FLOAT_VECTOR,
-    dim=1536 # for the "text-embedding-ada-002" embedding model
+    dim=4096 # for the "Ollama Embedding model" embedding model
 )
 
 # source of the embedding (id)
@@ -63,5 +63,5 @@ collection = Collection(
 # create an index to speed up queries
 collection.create_index(
     field_name="embeddings",
-    index_params={"metric_type":"IP","index_type":"IVF_FLAT","params":{"nlist":16384}}
+    index_params={"metric_type":"IP","index_type":"IVF_FLAT","params":{"nlist":4096}}
 )
