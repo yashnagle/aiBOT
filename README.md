@@ -1,3 +1,9 @@
+# Vector DB schema
+
+```
+Vector DB schema
+```
+
 # To run the front-end
 
 ```bash
