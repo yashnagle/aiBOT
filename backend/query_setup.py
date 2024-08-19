@@ -30,13 +30,21 @@ template = """
     """
 prompt = PromptTemplate.from_template(template)
 
-vector_db = MilvusClient(
-    embedding_function = embeddings,
-    collection_name='aiBot_DB',
-    connection_args={"host":'127.0.0.1', "port":'19530'}
-    )
+# vector_db = MilvusClient(
+#     embedding_function = embeddings,
+#     collection_name='aiBot_DB',
+#     connection_args={"host":'127.0.0.1', "port":'19530'}
+#     )
 
 
-retriever = vector_db.as_retriever(search_kwargs={'k':3})
+connections.connect("default", host="127.0.0.1", port="19530")
+collection = Collection(name='aiBot_DB')
+collection.load()
+
+# embed_query = embeddings.embed_query(['what are the benefits of reading?'])
+# print(type(embed_query))
+
+# result = collection.query('What are the beneifts of reading?')
+# print(result)
 
 
