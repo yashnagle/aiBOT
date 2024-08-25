@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import constants
 from dotenv import load_dotenv
 from langchain_community.llms import Ollama
@@ -12,6 +13,15 @@ from operator import itemgetter
 from pymilvus import connections, Collection, CollectionSchema, FieldSchema, DataType, MilvusClient
 import pandas as pd
 import pymupdf
+from langchain_milvus.retrievers import MilvusCollectionHybridSearchRetriever
+from pymilvus import (
+    Collection,
+    CollectionSchema,
+    DataType,
+    FieldSchema,
+    WeightedRanker,
+    connections,
+)
 
 load_dotenv()
 
@@ -36,10 +46,66 @@ prompt = PromptTemplate.from_template(template)
 #     connection_args={"host":'127.0.0.1', "port":'19530'}
 #     )
 
-
 connections.connect("default", host="127.0.0.1", port="19530")
-collection = Collection(name='aiBot_DB')
-collection.load()
+collection_db = Collection(name='aiBot_DB')
+collection_db.load()
+client = MilvusClient(uri='http://localhost:19530')
+
+
+param = {
+    # use `IP` as the metric to calculate the distance
+    "metric_type": "IP",
+    "params": {
+        # search for vectors with a distance greater than 0.8
+        "radius": 0.8,
+        # filter out most similar vectors with a distance greater than or equal to 1.0
+        "range_filter" : 1.0
+    }
+}
+
+res = collection_db.search(
+    data= [embeddings.embed_query('What are the benefits of reading?')],
+    anns_field='embeddings',
+    param=param,
+    limit=5
+)
+
+for i in res:
+    for j in i:
+        print(j.id)
+        val = client.get(collection_name='aiBot_DB',
+        ids = [j.id])
+        print(val)
+
+
+
+
+
+# result = json.dumps(res, indent=4)
+# print(result)
+
+# #Hybrid search
+# retriever = MilvusCollectionHybridSearchRetriever(
+#     collection=collection_db,
+#     rerank=WeightedRanker(0.5, 0.5),
+#     anns_fields=['embeddings', 'embeddings'],
+#     field_embeddings=[embeddings, embeddings],
+#     field_search_params=[{"metric_type": "IP"}, {"metric_type": "IP"}],
+#     top_k=3,
+#     text_field='text',
+# )
+# print(retriever.invoke("What are the benefits of reading?"))
+
+
+
+
+# query = 'What are the benefits of reading?'
+# query_vector = embeddings.embed_query(query)
+
+# result = search_and_query(collection, [query_vector], 'embeddings', {"metric_type": "IP", "params": {"nlist": 4096}})
+
+# print(result)
+
 
 # embed_query = embeddings.embed_query(['what are the benefits of reading?'])
 # print(type(embed_query))

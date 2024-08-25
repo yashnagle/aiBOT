@@ -35,7 +35,7 @@ MODEL_KEY = os.getenv('MODEL_KEY')
 MODEL = 'mistral'
 
 # model = Ollama(model=MODEL)
-embeddings = OllamaEmbeddings(model=MODEL, )
+embeddings = OllamaEmbeddings(model=MODEL)
 parser = StrOutputParser()
 
 text_splitter = RecursiveCharacterTextSplitter(
