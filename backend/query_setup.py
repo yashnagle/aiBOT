@@ -13,6 +13,7 @@ from operator import itemgetter
 from pymilvus import connections, Collection, CollectionSchema, FieldSchema, DataType, MilvusClient
 import pandas as pd
 import pymupdf
+from langchain_community.vectorstores import milvus
 from langchain_milvus.retrievers import MilvusCollectionHybridSearchRetriever
 from pymilvus import (
     Collection,
@@ -31,14 +32,33 @@ MODEL = 'mistral'
 embeddings = OllamaEmbeddings(model=MODEL)
 parser = StrOutputParser()
 
-template = """
-    Answer the question based on the context below. If you cannot answer the question, reply "I don't know".
+milvus = milvus.Milvus(
+    embedding_function = embeddings,
+    collection_name = 'aiBot_DB',
+    primary_field = 'id',
+    auto_id=True,
+    vector_field = 'embeddings',
+    text_field='text',
+    connection_args={
+        'address':'localhost:19530'
+    }
 
-    Context: {context}
+)
+print(milvus)
 
-    Question: {question}
-    """
-prompt = PromptTemplate.from_template(template)
+MODEL = 'mistral'
+
+model = Ollama(model=MODEL)
+
+
+# template = """
+#     Answer the question based on the context below. If you cannot answer the question, reply "I don't know".
+
+#     Context: {context}
+
+#     Question: {question}
+#     """
+# prompt = PromptTemplate.from_template(template)
 
 # vector_db = MilvusClient(
 #     embedding_function = embeddings,
@@ -63,23 +83,50 @@ param = {
     }
 }
 
-res = collection_db.search(
-    data= [embeddings.embed_query('What are the benefits of reading?')],
-    anns_field='embeddings',
-    param=param,
-    limit=5
+# def query(question):
+#     res = collection_db.search(
+#         data= [embeddings.embed_query(question)],
+#         anns_field='embeddings',
+#         param=param,
+#         limit=5
+#     )
+
+#     result = []
+#     for i in res:
+#         for j in i:
+#             val = client.get(collection_name='aiBot_DB',
+#             ids = [j.id])
+#             result.append(val)
+
+#     return result
+
+
+
+# print(query('What are the benefits of reading?'))
+
+retriever = milvus.as_retriever()
+
+print(retriever)
+
+template = """
+Answer the question based on the context below. If you cannot answer the question, reply "I don't know".
+
+Context: {context}
+
+Question: {question}
+"""
+
+prompt = PromptTemplate.from_template(template)
+
+chain = (
+
+    { "context": itemgetter("question") | retriever, "question": itemgetter("question") } 
+    | prompt
+    | model
+    | parser 
 )
 
-for i in res:
-    for j in i:
-        print(j.id)
-        val = client.get(collection_name='aiBot_DB',
-        ids = [j.id])
-        print(val)
-
-
-
-
+print(chain.invoke({'question':'Write a 500 word essay on the benefits of reading?'}))
 
 # result = json.dumps(res, indent=4)
 # print(result)

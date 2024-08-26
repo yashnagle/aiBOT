@@ -17,6 +17,8 @@ import pymupdf
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 client = MilvusClient(uri="http://localhost:19530")
 
+
+
 import PyPDF2
 
 doc = pymupdf.open("uploads/test_doc1.pdf")
