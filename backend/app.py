@@ -9,6 +9,10 @@ import haystack_setup
 import rag_query
 from milvus_haystack.milvus_embedding_retriever import MilvusEmbeddingRetriever
 from pathlib import Path
+from Executables import code as dec
+
+
+
 #Imports a PyMilvus package:
 from pymilvus import (
     connections,
@@ -18,6 +22,8 @@ from pymilvus import (
     DataType,
     Collection,
 )
+
+
 
 ingesting_pipeline = haystack_setup.get_ingesting_pipeline()
 # query_pipeline = rag_query.get_query_pipeline()
@@ -38,6 +44,8 @@ def allowed_file(filename):
 @app.route("/", methods = ['GET', 'POST'])
 @cross_origin()
 def query():
+    '''Update this'''
+
     connections.connect("default", host="localhost", port="19530")
     collection = Collection('HaystackCollection')
     print(collection.num_entities)
@@ -67,15 +75,17 @@ def query():
 @app.route('/upload', methods=['POST'])
 @cross_origin()
 def upload_file():
-
+    
     if 'file' in request.files:
         file = request.files['file']
         path = "uploads"
         file.save(os.path.join(path, file.filename))
         # path = path + "/"+file.filename
+
+        print(dec.import_df(list(Path(path).glob(file.filename))))
         
-        print(path)
-        print(ingesting_pipeline.run({"file_type_router": {"sources": list(Path(path).glob(file.filename))}}))
+       
+        # print(ingesting_pipeline.run({"file_type_router": {"sources": list(Path(path).glob(file.filename))}}))
         return jsonify({'status':'File Ingested'})
     else:
         return jsonify({'status':'File Not Received'})
